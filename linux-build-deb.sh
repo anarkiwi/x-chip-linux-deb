@@ -34,10 +34,12 @@ cd linux-*
 # name / uname. Editing in place keeps abiname = <upstream>+deb13, so the
 # linux-image-*-chip name and uname stay stable -- only the VERSION moves.
 #
-# CHIP_BUILD_ID defaults to unix time; set it (e.g. the kernel submodule commit
-# epoch) for reproducible builds.
+# CHIP_BUILD_ID (the Makefile passes this repo's HEAD commit epoch) is required:
+# the same commit always yields the same version, and a later commit a higher
+# one. A new Debian upload changes the leading version or adds/raises
+# +deb13uN, both of which sort above the previous build at the same serial.
 base_ver=$(dpkg-parsechangelog -S Version)
-serial="${CHIP_BUILD_ID:-$(date -u +%s)}"
+serial="${CHIP_BUILD_ID:?CHIP_BUILD_ID must be set (see Makefile)}"
 chip_ver=$(printf '%s' "$base_ver" | sed -E "s/^(.*-[0-9]+)(\+deb[0-9]+u[0-9]+)?$/\1.${serial}\2/")
 sed -i -E "1s/\([^)]*\)/(${chip_ver})/" debian/changelog
 
@@ -93,4 +95,4 @@ DEB_BUILD_OPTIONS="parallel=$(nproc)" \
 
 # hand the build outputs (the .debs live in build/) back to the invoking
 # host user (HOST_UID/GID from the Makefile), so build/ isn't root-owned.
-[ -n "${HOST_UID:-}" ] && chown -R "$HOST_UID:$HOST_GID" "$HERE/build" || true
+if [ -n "${HOST_UID:-}" ]; then chown -R "$HOST_UID:${HOST_GID:-$HOST_UID}" "$HERE/build"; fi

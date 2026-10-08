@@ -2,11 +2,10 @@
 
 # platform flags maybe unnecessary, but left in for maybe
 # arm mac builders???
-# CHIP_BUILD_ID is appended to the kernel package version (see linux-build-deb.sh)
-# so rebuilds get a unique, upgradable version. Default to this repo's HEAD commit
-# time (deterministic + monotonic); the orchestrator may pass its own. Falls back
-# to now if not in a git checkout.
-CHIP_BUILD_ID ?= $(shell git show -s --format=%ct HEAD 2>/dev/null || date -u +%s)
+# CHIP_BUILD_ID is appended to the kernel package version (see linux-build-deb.sh).
+# This repo's HEAD commit time: deterministic for a given commit and increasing
+# with each new commit.
+CHIP_BUILD_ID ?= $(shell git show -s --format=%ct HEAD)
 
 all:
 	docker build --platform linux/amd64 -t chip-linux-amd64 .
